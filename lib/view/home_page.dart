@@ -1,5 +1,4 @@
 import 'package:bloc_flutter/controller/bloc_controller.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
 class HomePage extends StatefulWidget {
@@ -75,22 +74,24 @@ class _HomePageState extends State<HomePage> {
                 }, child: Text('Enviar')),
                 SizedBox(height: 20,),
 
-                StreamBuilder<Map>(
+                StreamBuilder<SearchCepState>(
                   stream: blocController.cepResult,
                   builder: (context,snapshot){
-                    if(snapshot.hasError){
-                      return Text('${snapshot.error}',style: TextStyle(color: Colors.red),);
-                    }
-
+                    
+                    var state = snapshot.data;
                     if(!snapshot.hasData){
                       return Container();
                     }
 
-                    if(snapshot.connectionState == ConnectionState.waiting){
-                      Expanded(child: Container(child: CircularProgressIndicator(),));
+                    if(state is SearchCepError){
+                      return Text('${snapshot.error}',style: TextStyle(color: Colors.red),);
                     }
-                    final data = snapshot.data!;
-                    return Text('Cidade: ${data['localidade']}');
+
+                    if(state is SearchCepLoading){
+                      return Container(child:CircularProgressIndicator(),);
+                    }
+                     state = state as SearchCepSucess;
+                    return Text('Cidade: ${state.data['localidade']}');
                   })
                 ]
               ),

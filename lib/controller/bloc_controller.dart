@@ -3,21 +3,43 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:rxdart/rxdart.dart';
 
+
+abstract class SearchCepState{
+
+}
+
+class SearchCepSucess implements SearchCepState{
+  final Map data;
+
+  const SearchCepSucess(this.data);
+}
+
+class SearchCepLoading implements SearchCepState{
+  const SearchCepLoading();
+}
+
+class SearchCepError implements SearchCepState{
+  final String message;
+
+  const SearchCepError(this.message);
+
+}
+
 class BlocController{
    final _streamController = StreamController<String>.broadcast();
    Sink get searchcep => _streamController.sink;
-   Stream<Map> get cepResult => _streamController.stream.switchMap(_searchCep);
+   Stream<SearchCepState> get cepResult => _streamController.stream.switchMap(_searchCep);
 
 
-   Stream<Map> _searchCep(String cep) async*{
-
+   Stream<SearchCepState> _searchCep(String cep) async*{
+    yield const SearchCepLoading();
     try{
-      var result = await Dio().get('https://viacep.com.br/ws/$cep/json/');
-      yield result.data as Map;
+      final response = await Dio().get('https://viacep.com.br/ws/$cep/json/');
+      yield SearchCepSucess(response.data);
 
     }catch(e){
-      yield* Stream.error(Exception('Erro na pesquisa'));
-      throw Exception('erro');
+      yield const SearchCepError('Erro ao buscar cep');
+
 
     }
     
